@@ -7,8 +7,8 @@ from pathlib import Path
 from ..models import DatasetConfig, DatasetInfo
 
 
-class DataLoader:
-    """Handles dataset loading, validation, and preprocessing."""
+class DatasetAnalyzer:
+    """Handles dataset analysis, validation, and preprocessing."""
     
     def __init__(self, config: DatasetConfig):
         self.config = config
@@ -22,8 +22,8 @@ class DataLoader:
         if not self.config.data_path.is_dir():
             raise ValueError(f"Data path must be a directory: {self.config.data_path}")
     
-    def load_dataset(self) -> DatasetInfo:
-        """Load and analyze the dataset."""
+    def analyze_dataset(self) -> DatasetInfo:
+        """Analyze the dataset structure and metadata."""
         image_files = self._find_image_files()
         annotation_files = self._find_annotation_files()
         

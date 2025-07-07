@@ -1,3 +1,3 @@
 """Data processing utilities."""
 
-from .data_loader import DataLoader as DataLoader
+from .dataset_analyzer import DatasetAnalyzer as DatasetAnalyzer

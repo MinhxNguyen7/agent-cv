@@ -39,3 +39,6 @@ class TaskResult(BaseModel):
     error_message: str | None = None
     metadata: dict[str, Union[str, Path]] = Field(default_factory=dict)
     duration_seconds: float | None = None
+
+    def __str__(self) -> str:
+        return str(self.model_dump())

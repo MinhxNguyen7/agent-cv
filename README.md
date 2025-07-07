@@ -12,7 +12,7 @@ This system combines AI agents with computer vision tools to automatically:
 ## Architecture
 
 **Core Components:**
-- **DataLoader**: Data ingestion, preprocessing, validation  
+- **DatasetAnalyzer**: Dataset analysis, validation, and preprocessing
 - **AutoLabeler**: Grounding DINO + VLM labeling pipeline
 
 **Agents:**
@@ -43,11 +43,12 @@ python main.py
 
 ```
 agent_cv/
-├── agents/          # Agent implementations
-├── models/          # Data models for communication
-├── tools/           # Utility functions and data processing
-├── config.py        # Configuration management
-└── lmm.py          # Large multimodal model integration
+├── agents/             # Agent implementations
+├── models/             # Data models for communication
+├── actions/            # Agent-callable action functions
+├── data_processing/    # Dataset analysis and preprocessing
+├── config.py           # Configuration management
+└── lmm.py             # Large multimodal model integration
 ```
 
 ## Development Plan
@@ -57,9 +58,9 @@ agent_cv/
    - Include configuration files such as `pyproject.toml`, `.env.example`, and `README.md`
 
 2. **Build interface functions:**
-   - Implement core functions in `agent_cv/tools/` for data loading, preprocessing, training, and evaluation
+   - Implement core action functions in `agent_cv/actions/` for dataset analysis, training, and evaluation
    - Implement data models in `agent_cv/models/` for communication and parsing
-   - Implement tool search with encoding for agent tool retrieval
+   - Implement action search with encoding for agent action retrieval
 
 3. **Implement agent components:**
    - Develop agent classes in `agent_cv/agents/` to orchestrate workflows and manage state

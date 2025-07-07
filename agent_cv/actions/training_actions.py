@@ -115,7 +115,7 @@ def _create_dataset_yaml(dataset_info: DatasetInfo, output_dir: Path) -> Path:
     class_names = list(dataset_info.class_distribution.keys())
 
     dataset_config = {
-        "path": str(dataset_info.config.data_path),
+        "path": str(dataset_info.path),
         "train": "train",  # Relative to path
         "val": "val",  # Relative to path
         "test": "test",  # Relative to path (optional)
@@ -144,7 +144,7 @@ def _create_yolo_config(
             "name": training_config.model_type,
         },
         "dataset": {
-            "name": dataset_info.config.name,
+            "name": dataset_info.name,
             "path": str(dataset_yaml),
             "class_num": len(dataset_info.class_distribution),
             "class_list": list(dataset_info.class_distribution.keys()),
@@ -205,7 +205,7 @@ def _create_yolo_config(
                 },
             },
         },
-        "name": f"{training_config.model_type}_{dataset_info.config.name}",
+        "name": f"{training_config.model_type}_{dataset_info.name}",
         "device": training_config.device,
         "cpu_num": training_config.workers,
         "weight": True,  # Use pretrained weights

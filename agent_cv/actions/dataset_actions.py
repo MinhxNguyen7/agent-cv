@@ -3,22 +3,10 @@
 from pathlib import Path
 
 from ..data_processing import DatasetAnalyzer
-from ..models import DatasetConfig, DatasetInfo
+from ..models import DatasetInfo
 
 
-def analyze_dataset(data_path: Path, **kwargs) -> DatasetInfo:
-    """Analyze a dataset structure and metadata.
-
-    Args:
-        data_path: Path to dataset directory
-        **kwargs: Additional configuration options
-
-    Returns:
-        DatasetInfo with dataset metadata and statistics
-    """
-    config = DatasetConfig(
-        name=kwargs.get("name", data_path.name), data_path=data_path, **kwargs
-    )
-
-    analyzer = DatasetAnalyzer(config)
+def analyze_dataset(dataset_name: str) -> DatasetInfo:
+    dataset_path = Path("datasets") / dataset_name
+    analyzer = DatasetAnalyzer(dataset_path)
     return analyzer.analyze_dataset()

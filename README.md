@@ -16,10 +16,10 @@ This system combines AI agents with computer vision tools to automatically:
 - **AutoLabeler**: Grounding DINO + VLM labeling pipeline
 
 **Agents:**
-- **OrchestratorAgent**: Workflow coordination and decision-making
-- **TrainingAgent**: YOLOv9 training orchestration and optimization
+- **OrchestratorAgent**: Workflow coordination user communication
+- **TrainingAgent**: YOLOv9 training decision-making in tandem with EvaluationAgent
 - **EvaluationAgent**: Model assessment and validation
-- **DeploymentAgent**: Model conversion and deployment code generation
+- **DeploymentAgent**: Code generation to format/process model output
 
 ## Installation
 

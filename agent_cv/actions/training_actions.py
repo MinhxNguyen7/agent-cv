@@ -2,6 +2,7 @@
 
 import time
 from pathlib import Path
+import yaml
 
 from omegaconf import OmegaConf
 from lightning import Trainer
@@ -109,7 +110,6 @@ def train_model(
 
 def _create_dataset_yaml(dataset_info: DatasetInfo, output_dir: Path) -> Path:
     """Create YOLO dataset configuration file."""
-    import yaml
 
     # Extract class names from dataset info
     class_names = list(dataset_info.class_distribution.keys())

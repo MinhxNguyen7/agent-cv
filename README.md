@@ -17,8 +17,7 @@ This system combines AI agents with computer vision tools to automatically:
 
 **Agents:**
 - **OrchestratorAgent**: Workflow coordination user communication
-- **TrainingAgent**: YOLOv9 training decision-making in tandem with EvaluationAgent
-- **EvaluationAgent**: Model assessment and validation
+- **TrainingAgent**: YOLOv9 training and model assessment
 - **DeploymentAgent**: Code generation to format/process model output
 
 ## Installation
@@ -65,7 +64,7 @@ agent_cv/
 3. **Implement agent components:**
    - Develop agent classes in `agent_cv/agents/` to orchestrate workflows and manage state
    - Create OrchestratorAgent for workflow coordination
-   - Build TrainingAgent, EvaluationAgent, and DeploymentAgent
+   - Build TrainingAgent and DeploymentAgent
 
 4. **Integrate automatic labeling:**
    - Add support for automatic data labeling using Grounding DINO for object detection

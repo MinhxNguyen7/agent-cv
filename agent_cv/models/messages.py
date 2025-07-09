@@ -6,7 +6,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 
-role_t = Literal["User", "Orchestrator", "Training", "Deployment"]
+role_t = Literal[
+    "User", "CodeOutput", "OrchestratorAgent", "TrainingAgent", "DeploymentAgent"
+]
 
 
 class TaskStatus(Enum):

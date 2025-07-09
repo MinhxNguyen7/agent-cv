@@ -20,16 +20,42 @@ def train_model(
     output_dir: Path,
 ) -> TrainingResult:
     """Train a YOLO model on the provided dataset using MultimediaTechLab YOLO.
+    
+    This function trains a YOLO model using the specified dataset and configuration.
+    Training progress, metrics, and results are printed to stdout for agent visibility.
+    The function handles both successful training and error cases gracefully.
 
     Args:
-        dataset_info: Dataset information from analyze_dataset
-        training_config: Training configuration parameters
-        output_dir: Directory to save model and logs
+        dataset_info: Dataset information from analyze_dataset containing:
+            - Dataset path and class information
+            - Class distribution and counts
+            - Train/val/test split details
+        training_config: Training configuration parameters including:
+            - Model type (e.g., 'yolov9c', 'yolov9e')
+            - Training hyperparameters (epochs, batch_size, learning_rate)
+            - Hardware settings (device, workers)
+        output_dir: Directory to save model checkpoints and training logs
 
     Returns:
-        TrainingResult with training metrics and model path
+        TrainingResult: Comprehensive training results including:
+            - Training status (completed/failed)
+            - Best and final epoch metrics
+            - Model checkpoint path
+            - Training logs path
+            - Total training time
+            - Error information (if failed)
+            
+    Prints:
+        Training progress, metrics, and final results to stdout for agent consumption
     """
 
+    print(f"🚀 Starting model training")
+    print(f"📊 Dataset Information:")
+    print(dataset_info)
+    print(f"⚙️  Training Configuration:")
+    print(training_config)
+    print(f"📁 Output Directory: {output_dir}")
+    
     start_time = time.time()
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -39,7 +65,7 @@ def train_model(
         cfg = _create_yolo_config(dataset_info, training_config, output_dir)
 
         # Setup logging and callbacks
-        callbacks, loggers, save_path = setup(cfg)
+        callbacks, loggers, _ = setup(cfg)
 
         # Create Lightning trainer
         trainer = Trainer(
@@ -73,7 +99,7 @@ def train_model(
 
         total_time = time.time() - start_time
 
-        return TrainingResult(
+        result = TrainingResult(
             config=training_config,
             status="completed",
             best_epoch=best_metrics.epoch,
@@ -84,6 +110,11 @@ def train_model(
             model_path=model_path,
             logs_path=logs_path,
         )
+
+        print(f"✅ Training completed successfully!")
+        print(f"📈 Training Results:")
+        print(result)
+        return result
 
     except Exception as e:
         total_time = time.time() - start_time
@@ -96,7 +127,7 @@ def train_model(
             time_seconds=total_time,
         )
 
-        return TrainingResult(
+        result = TrainingResult(
             config=training_config,
             status="failed",
             best_epoch=0,
@@ -106,6 +137,11 @@ def train_model(
             total_time_seconds=total_time,
             error_message=str(e),
         )
+        
+        print(f"❌ Training failed!")
+        print(f"📈 Training Results:")
+        print(result)
+        return result
 
 
 def _create_dataset_yaml(dataset_info: DatasetInfo, output_dir: Path) -> Path:

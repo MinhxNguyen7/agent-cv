@@ -23,6 +23,7 @@ dependencies = [
     "pydantic",
     "nbclient",
     "nbformat",
+    "ipykernel",
     "rich",
     "dotenv",
     "requests",

@@ -1,150 +1,250 @@
 """Data loading and preprocessing utilities."""
 
+from itertools import chain
 import json
 import random
 from pathlib import Path
+from typing import Any, NamedTuple, Optional
+from collections import defaultdict, Counter
+import logging
 
-from ..models import DatasetConfig, DatasetInfo
+from ..models import DatasetInfo
+
+
+class ImagePaths(NamedTuple):
+    train: list[Path]
+    val: list[Path]
+    test: list[Path]
 
 
 class DatasetAnalyzer:
-    """Handles dataset analysis, validation, and preprocessing."""
-    
-    def __init__(self, config: DatasetConfig):
-        self.config = config
-        self._validate_config()
-    
-    def _validate_config(self) -> None:
-        """Validate dataset configuration."""
-        if not self.config.data_path.exists():
-            raise FileNotFoundError(f"Data path does not exist: {self.config.data_path}")
-        
-        if not self.config.data_path.is_dir():
-            raise ValueError(f"Data path must be a directory: {self.config.data_path}")
-    
-    def analyze_dataset(self) -> DatasetInfo:
-        """Analyze the dataset structure and metadata."""
-        image_files = self._find_image_files()
-        annotation_files = self._find_annotation_files()
-        
-        # Validate image-annotation pairs
-        valid_pairs = self._validate_pairs(image_files, annotation_files)
-        
-        # Analyze class distribution
-        class_distribution = self._analyze_classes(valid_pairs)
-        
-        # Create data splits
-        train_samples, val_samples, test_samples = self._create_splits(valid_pairs)
-        
-        return DatasetInfo(
-            config=self.config,
-            total_images=len(image_files),
-            total_annotations=len(annotation_files),
-            class_distribution=class_distribution,
-            train_samples=len(train_samples),
-            val_samples=len(val_samples),
-            test_samples=len(test_samples),
+    """
+    Analyzes the structure and metadata of a dataset.
+
+    This class supports the YOLO dataset format only.
+    """
+
+    IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
+
+    def __init__(self, dataset_path: Path | str):
+        self.dataset_path = Path(dataset_path)
+        self.logger = logging.getLogger(__name__)
+        self._validate_path()
+        self._images: ImagePaths | None = None
+        self._annotations: list[Path] = []
+        self._class_names: Optional[list[str]] = None
+        self._format: Optional[str] = None
+
+    def _validate_path(self) -> None:
+        """Validate dataset path."""
+        if not self.dataset_path.exists():
+            raise FileNotFoundError(f"Dataset path does not exist: {self.dataset_path}")
+
+        if not self.dataset_path.is_dir():
+            raise ValueError(f"Dataset path must be a directory: {self.dataset_path}")
+
+    def _discover_images(self) -> ImagePaths:
+        """Discover all image files in the dataset."""
+        return ImagePaths(
+            train=list(
+                chain(
+                    *(
+                        self.dataset_path.rglob(f"*{ext}")
+                        for ext in self.IMAGE_EXTENSIONS
+                    )
+                )
+            ),
+            val=list(
+                chain(
+                    *(
+                        self.dataset_path.rglob(f"*{ext}")
+                        for ext in self.IMAGE_EXTENSIONS
+                    )
+                )
+            ),
+            test=list(
+                chain(
+                    *(
+                        self.dataset_path.rglob(f"*{ext}")
+                        for ext in self.IMAGE_EXTENSIONS
+                    )
+                )
+            ),
         )
-    
-    def _find_image_files(self) -> list[Path]:
-        """Find all image files in the dataset directory."""
-        image_files = []
-        for ext in self.config.image_extensions:
-            image_files.extend(self.config.data_path.rglob(f"*{ext}"))
-        return sorted(image_files)
-    
-    def _find_annotation_files(self) -> list[Path]:
-        """Find all annotation files based on format."""
-        if self.config.annotation_format == "yolo":
-            return sorted(self.config.data_path.rglob("*.txt"))
-        elif self.config.annotation_format == "coco":
-            return sorted(self.config.data_path.rglob("*.json"))
-        else:
-            raise ValueError(f"Unsupported annotation format: {self.config.annotation_format}")
-    
-    def _validate_pairs(self, image_files: list[Path], annotation_files: list[Path]) -> list[tuple[Path, Path]]:
-        """Validate that each image has a corresponding annotation file."""
-        valid_pairs = []
-        
-        # Create lookup for annotation files
-        annotation_lookup = {f.stem: f for f in annotation_files}
-        
-        for image_file in image_files:
-            if image_file.stem in annotation_lookup:
-                valid_pairs.append((image_file, annotation_lookup[image_file.stem]))
-        
-        return valid_pairs
-    
-    def _analyze_classes(self, valid_pairs: list[tuple[Path, Path]]) -> dict[str, int]:
-        """Analyze class distribution in the dataset."""
-        class_counts = {}
-        
-        for _, annotation_file in valid_pairs:
-            if self.config.annotation_format == "yolo":
-                classes = self._parse_yolo_classes(annotation_file)
-            else:
-                classes = self._parse_coco_classes(annotation_file)
-            
-            for class_id in classes:
-                class_name = self._get_class_name(class_id)
-                class_counts[class_name] = class_counts.get(class_name, 0) + 1
-        
-        return class_counts
-    
-    def _parse_yolo_classes(self, annotation_file: Path) -> list[int]:
-        """Parse YOLO format annotation file to extract class IDs."""
-        classes = []
-        try:
-            with open(annotation_file, 'r') as f:
-                for line in f:
-                    parts = line.strip().split()
-                    if parts:
-                        classes.append(int(parts[0]))
-        except (ValueError, IndexError):
-            pass  # Skip malformed lines
-        
-        return classes
-    
-    def _parse_coco_classes(self, annotation_file: Path) -> list[int]:
-        """Parse COCO format annotation file to extract class IDs."""
-        classes = []
-        try:
-            with open(annotation_file, 'r') as f:
-                data = json.load(f)
-                
-            # Handle both COCO annotation format and single image annotation
-            if 'annotations' in data:
-                # Full COCO format
-                for annotation in data['annotations']:
-                    if 'category_id' in annotation:
-                        classes.append(annotation['category_id'])
-            elif 'category_id' in data:
-                # Single annotation format
-                classes.append(data['category_id'])
-                
-        except (json.JSONDecodeError, KeyError, FileNotFoundError):
-            pass  # Skip malformed files
-            
-        return classes
-    
-    def _get_class_name(self, class_id: int) -> str:
-        """Get class name from class ID."""
-        if self.config.class_names and class_id < len(self.config.class_names):
-            return self.config.class_names[class_id]
-        return f"class_{class_id}"
-    
-    def _create_splits(self, valid_pairs: list[tuple[Path, Path]]) -> tuple[list, list, list]:
-        """Create train/validation/test splits."""
-        # Shuffle pairs for random splitting
-        shuffled_pairs = valid_pairs.copy()
-        random.shuffle(shuffled_pairs)
-        
-        total = len(shuffled_pairs)
-        train_end = int(total * self.config.split.train_ratio)
-        val_end = train_end + int(total * self.config.split.val_ratio)
-        
-        train_samples = shuffled_pairs[:train_end]
-        val_samples = shuffled_pairs[train_end:val_end]
-        test_samples = shuffled_pairs[val_end:]
-        
-        return train_samples, val_samples, test_samples
+
+    def _discover_annotations(self) -> list[Path]:
+        """Discover annotation files in the dataset."""
+        annotations = []
+        annotations.extend(self.dataset_path.rglob("*.txt"))  # YOLO format
+        annotations.extend(self.dataset_path.rglob("*.json"))  # COCO format
+        annotations.extend(self.dataset_path.rglob("*.xml"))  # Pascal VOC format
+        return sorted(annotations)
+
+    def _detect_format(self) -> str:
+        """Detect the annotation format of the dataset."""
+        if not self._annotations:
+            return "unknown"
+
+        # Check for YOLO format (txt files with normalized coordinates)
+        txt_files = [f for f in self._annotations if f.suffix == ".txt"]
+        if txt_files:
+            try:
+                with open(txt_files[0], "r") as f:
+                    line = f.readline().strip()
+                    if line:
+                        parts = line.split()
+                        if len(parts) >= 5 and all(
+                            0 <= float(p) <= 1 for p in parts[1:5]
+                        ):
+                            return "yolo"
+            except (ValueError, IndexError):
+                pass
+
+        # Check for COCO format (JSON files)
+        json_files = [f for f in self._annotations if f.suffix == ".json"]
+        if json_files:
+            try:
+                with open(json_files[0], "r") as f:
+                    data = json.load(f)
+                    if "annotations" in data and "images" in data:
+                        return "coco"
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+        # Check for Pascal VOC format (XML files)
+        xml_files = [f for f in self._annotations if f.suffix == ".xml"]
+        if xml_files:
+            return "pascal_voc"
+
+        return "unknown"
+
+    def _parse_yolo_annotations(self) -> tuple[list[str], dict[str, int]]:
+        """Parse YOLO format annotations."""
+        class_counter = Counter()
+        class_names = []
+
+        # Look for classes.txt or similar
+        classes_file = self.dataset_path / "classes.txt"
+        if not classes_file.exists():
+            classes_file = self.dataset_path / "obj.names"
+
+        if classes_file.exists():
+            with open(classes_file, "r") as f:
+                class_names = [line.strip() for line in f if line.strip()]
+
+        # Count classes from annotation files
+        for ann_file in self._annotations:
+            if ann_file.suffix == ".txt":
+                try:
+                    with open(ann_file, "r") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line:
+                                class_id = int(line.split()[0])
+                                class_counter[class_id] += 1
+                except (ValueError, IndexError):
+                    continue
+
+        # Create class names if not found
+        if not class_names:
+            max_class_id = max(class_counter.keys()) if class_counter else 0
+            class_names = [f"class_{i}" for i in range(max_class_id + 1)]
+
+        # Convert to string-based counter
+        class_distribution = {}
+        for class_id, count in class_counter.items():
+            if class_id < len(class_names):
+                class_distribution[class_names[class_id]] = count
+
+        return class_names, class_distribution
+
+    def _parse_coco_annotations(self) -> tuple[list[str], dict[str, int]]:
+        """Parse COCO format annotations."""
+        class_names = []
+        class_distribution = defaultdict(int)
+
+        for ann_file in self._annotations:
+            if ann_file.suffix == ".json":
+                try:
+                    with open(ann_file, "r") as f:
+                        data = json.load(f)
+
+                        # Get categories
+                        categories = data.get("categories", [])
+                        if categories and not class_names:
+                            class_names = [cat["name"] for cat in categories]
+
+                        # Count annotations
+                        for ann in data.get("annotations", []):
+                            cat_id = ann["category_id"]
+                            if cat_id < len(class_names):
+                                class_distribution[class_names[cat_id]] += 1
+
+                except (json.JSONDecodeError, KeyError):
+                    continue
+
+        return class_names, dict(class_distribution)
+
+    def analyze_dataset(self) -> DatasetInfo:
+        """Analyze the dataset and return comprehensive information."""
+        self.logger.info(f"Analyzing dataset at {self.dataset_path}")
+
+        # Discover files
+        self._images = self._discover_images()
+        self._annotations = self._discover_annotations()
+
+        if not self._images:
+            raise ValueError("No images found in dataset")
+
+        # Detect format and parse annotations
+        self._format = self._detect_format()
+
+        class_names = []
+        class_distribution = {}
+
+        if self._format == "yolo":
+            class_names, class_distribution = self._parse_yolo_annotations()
+        elif self._format == "coco":
+            class_names, class_distribution = self._parse_coco_annotations()
+
+        # Calculate split counts
+        total_images = len(self._images)
+        split = (
+            len(self._images.train) / total_images if total_images > 0 else 0,
+            len(self._images.val) / total_images if total_images > 0 else 0,
+            len(self._images.test) / total_images if total_images > 0 else 0,
+        )
+
+        # Create dataset info
+        dataset_info = DatasetInfo(
+            name=self.dataset_path.name,
+            path=self.dataset_path,
+            class_names=class_names if class_names else None,
+            class_distribution=class_distribution,
+            total_images=total_images,
+            split=split,
+            train_samples=len(self._images.train),
+            val_samples=len(self._images.val),
+            test_samples=len(self._images.test),
+        )
+
+        self.logger.info(
+            f"Dataset analysis complete: {total_images} images, {len(class_names)} classes"
+        )
+
+        return dataset_info
+
+    def get_sample_images(self, n: int = 5) -> ImagePaths:
+        """
+        Get `n` random images from each split of the dataset.
+
+        Returns a 3-tuple of lists containing random images from train, val, and test splits.
+        """
+        if not self._images:
+            self._images = self._discover_images()
+
+        return ImagePaths(
+            train=random.sample(self._images.train, min(n, len(self._images.train))),
+            val=random.sample(self._images.val, min(n, len(self._images.val))),
+            test=random.sample(self._images.test, min(n, len(self._images.test))),
+        )

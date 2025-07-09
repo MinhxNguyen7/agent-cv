@@ -3,36 +3,31 @@
 from pathlib import Path
 
 from ..data_processing import DatasetAnalyzer
-from ..models import DatasetInfo
 
 
-def analyze_dataset(dataset_name: str) -> DatasetInfo:
-    """Analyze a dataset and return comprehensive information about it.
-    
-    This function analyzes a dataset located in the datasets directory and returns
-    detailed information including class distribution, image counts, and dataset structure.
-    The results are printed to stdout for agent visibility.
-    
-    Args:
-        dataset_name: Name of the dataset directory in datasets/
-        
-    Returns:
-        DatasetInfo: Comprehensive dataset information including:
-            - Dataset path and name
-            - Class distribution and counts
-            - Train/val/test split information
-            - Image format and size statistics
-            
-    Prints:
-        Complete dataset analysis results to stdout for agent consumption
+DATASET_DIRECTORY = Path("datasets")
+
+
+def make_dataset_analyzer(dataset_name: str) -> DatasetAnalyzer:
     """
-    print(f"🔍 Analyzing dataset: {dataset_name}")
-    
-    dataset_path = Path("datasets") / dataset_name
-    analyzer = DatasetAnalyzer(dataset_path)
-    result = analyzer.analyze_dataset()
-    
-    print(f"✅ Dataset analysis complete:")
-    print(result)
-    
-    return result
+    Creates a DatasetAnalyzer instance for the specified dataset.
+
+    The analyzer can be used as follows:
+
+    ```python
+    from agent_cv.actions import get_dataset_analyzer
+    analyzer = get_dataset_analyzer("path/to/dataset")
+
+    # Returns printable JSON-like
+    dataset_info = analyzer.analyze_dataset()
+
+    # Get n sample images from each split of the dataset
+    sample_images = analyzer.get_sample_images(n=2)
+    ```
+    """
+    dataset_path = DATASET_DIRECTORY / dataset_name
+
+    if not dataset_path.exists():
+        raise ValueError(f"Dataset {dataset_name} does not exist at {dataset_path}")
+
+    return DatasetAnalyzer(dataset_path)

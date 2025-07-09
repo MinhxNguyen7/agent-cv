@@ -25,7 +25,7 @@ class AgentMessage(BaseModel):
     sender: role_t = Field(..., description="Type of sender agent")
     recipient: role_t = Field(..., description="Type of recipient agent")
     message_type: str = Field(..., description="Type of message")
-    content: dict[str, Union[str, Path]] = Field(default_factory=dict)
+    content: dict[str, str | Path] = Field(default_factory=dict)
     timestamp: float | None = None
     correlation_id: str | None = None
 
@@ -35,9 +35,9 @@ class TaskResult(BaseModel):
 
     task_id: str
     status: TaskStatus
-    result: dict[str, Union[str, Path]] | None = None
+    result: dict[str, str | Path] | None = None
     error_message: str | None = None
-    metadata: dict[str, Union[str, Path]] = Field(default_factory=dict)
+    metadata: dict[str, str | Path] = Field(default_factory=dict)
     duration_seconds: float | None = None
 
     def __str__(self) -> str:

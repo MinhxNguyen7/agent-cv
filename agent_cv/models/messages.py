@@ -1,6 +1,6 @@
 """Agent communication and task management models."""
 
-from typing import Literal, Union
+from typing import Literal
 from enum import Enum
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 role_t = Literal["User", "Orchestrator", "Training", "Deployment"]
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(Enum):
     """Status of a task or operation."""
 
     PENDING = "pending"
@@ -24,7 +24,6 @@ class AgentMessage(BaseModel):
 
     sender: role_t = Field(..., description="Type of sender agent")
     recipient: role_t = Field(..., description="Type of recipient agent")
-    message_type: str = Field(..., description="Type of message")
     content: dict[str, str | Path] = Field(default_factory=dict)
     timestamp: float | None = None
     correlation_id: str | None = None

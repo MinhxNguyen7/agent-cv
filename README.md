@@ -1,24 +1,30 @@
 # agent-cv
 
-Agentic system to automatically train portable computer vision models using YOLOv9, Grounding DINO, and vision-language models for automated labeling and iterative training.
+Agentic system for automatically training computer vision models. Combines AI agents with YOLO training capabilities and Jupyter-based code execution for automated dataset analysis and model training.
 
 ## Overview
 
-This system combines AI agents with computer vision tools to automatically:
-- Generate high-quality labels for unlabeled datasets using Grounding DINO and VLMs
-- Train YOLOv9 models with iterative refinement
-- Generate deployment code for portable model conversion
+This system provides an automated workflow for computer vision model development:
+- **Dataset Analysis**: Multi-format support (YOLO, COCO, Pascal VOC) with comprehensive analysis
+- **Model Training**: Automated YOLO training with configurable parameters using MultimediaTechLab YOLO
+- **Code Execution**: Jupyter notebook environment for dynamic experimentation
+- **Multi-modal AI**: Integration with Anthropic's Claude for vision-language tasks
 
 ## Architecture
 
 **Core Components:**
-- **DatasetAnalyzer**: Dataset analysis, validation, and preprocessing
-- **AutoLabeler**: Grounding DINO + VLM labeling pipeline
+- **DatasetAnalyzer** (`agent_cv/data_processing/`): Multi-format dataset analysis and validation
+- **CodeInterpreter** (`agent_cv/execution/`): Jupyter notebook-based code execution environment
+- **AnthropicLMM** (`agent_cv/lmm/`): Large multimodal model with image support
 
-**Agents:**
-- **OrchestratorAgent**: Workflow coordination user communication
-- **TrainingAgent**: YOLOv9 training and model assessment
-- **DeploymentAgent**: Code generation to format/process model output
+**Data Models:**
+- **AgentMessage**: Inter-agent communication with multimodal content support
+- **DatasetInfo, TrainingConfig, TrainingResult**: Structured data models for ML workflows
+- **TaskStatus, TaskResult**: Task management and execution tracking
+
+**Actions System:**
+- **Dataset Actions**: Dataset analyzer creation and management
+- **Training Actions**: Full YOLO training pipeline with Lightning integration
 
 ## Installation
 
@@ -30,7 +36,10 @@ pip install -e .
 
 - Python 3.12+
 - PyTorch
-- Anthropic API key (for VLM labeling)
+- YOLO (MultimediaTechLab fork)
+- Lightning framework
+- Jupyter (nbclient, nbformat, ipykernel)
+- Anthropic API key (for multimodal AI capabilities)
 
 ## Usage
 
@@ -42,34 +51,61 @@ python main.py
 
 ```
 agent_cv/
-├── agents/             # Agent implementations
-├── models/             # Data models for communication
 ├── actions/            # Agent-callable action functions
+│   ├── dataset_actions.py    # Dataset analyzer creation
+│   └── training_actions.py   # YOLO training pipeline
+├── agents/             # AI agent implementations
+│   └── training_agent.py     # Training orchestration agent
 ├── data_processing/    # Dataset analysis and preprocessing
-├── config.py           # Configuration management
-└── lmm.py             # Large multimodal model integration
+│   └── dataset_analyzer.py   # Multi-format dataset analysis
+├── execution/          # Code execution environment
+│   └── interpreter.py        # Jupyter notebook interpreter
+├── lmm/               # Large multimodal model integration
+│   └── lmm.py                # Anthropic Claude integration
+├── models/            # Data models and communication
+│   ├── dataset.py            # Dataset information models
+│   ├── messages.py           # Agent communication models
+│   └── training.py           # Training configuration/results
+├── prompts/           # Agent prompts and templates
+│   ├── orchestrator_prompts.py
+│   └── training_prompts.py
+└── utils/             # Utility functions
+    ├── formatting.py         # Markup normalization
+    └── logs.py               # Rich logging utilities
 ```
 
-## Development Plan
+## Features
 
-1. **Set up project skeleton:**
-   - Organize directories and create initial module files
-   - Include configuration files such as `pyproject.toml`, `.env.example`, and `README.md`
+### Dataset Analysis
+- **Multi-format Support**: YOLO, COCO, Pascal VOC annotation formats
+- **Comprehensive Analysis**: Class distribution, train/val/test splits, metadata extraction
+- **Sample Generation**: Random sampling for dataset inspection
 
-2. **Build interface functions:**
-   - Implement core action functions in `agent_cv/actions/` for dataset analysis, training, and evaluation
-   - Implement data models in `agent_cv/models/` for communication and parsing
-   - Implement action search with encoding for agent action retrieval
+### Model Training
+- **YOLO Integration**: Full training pipeline using MultimediaTechLab YOLO
+- **Lightning Framework**: Robust training with callbacks, logging, and checkpoints
+- **Configurable Parameters**: Flexible training configuration with hyperparameter support
+- **Metrics Tracking**: Comprehensive training metrics (mAP, precision, recall, losses)
 
-3. **Implement agent components:**
-   - Develop agent classes in `agent_cv/agents/` to orchestrate workflows and manage state
-   - Create OrchestratorAgent for workflow coordination
-   - Build TrainingAgent and DeploymentAgent
+### Code Execution
+- **Jupyter Environment**: Full notebook environment with persistent kernel
+- **Execution Tracking**: Detailed logging of stdout, stderr, and exit codes
+- **Error Handling**: Robust exception handling and traceback capture
 
-4. **Integrate automatic labeling:**
-   - Add support for automatic data labeling using Grounding DINO for object detection
-   - Implement VLM integration for semantic labeling
+### Multimodal AI
+- **Vision-Language Models**: Integration with Anthropic's Claude for image analysis
+- **Flexible Content**: Support for text, images, and file paths in agent messages
+- **Media Processing**: Automatic base64 encoding for image files
 
-5. **Iterate and refine:**
-   - Test end-to-end workflows
-   - Improve agent logic and expand toolset as needed
+## Implementation Status
+
+The codebase currently implements:
+- ✅ Core data models and communication framework
+- ✅ Multi-format dataset analysis (YOLO, COCO, Pascal VOC)
+- ✅ Full YOLO training pipeline with Lightning integration
+- ✅ Jupyter-based code execution environment
+- ✅ Anthropic LMM integration with multimodal support
+- ✅ Rich logging and formatting utilities
+- ✅ Training agent framework with prompt templates
+- 🚧 End-to-end agent orchestration workflows
+- 🚧 Automated labeling pipeline integration

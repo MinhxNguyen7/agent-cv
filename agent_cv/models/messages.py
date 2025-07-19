@@ -21,9 +21,7 @@ class TaskStatus(Enum):
     CANCELLED = "cancelled"
 
 
-class AgentMessage(BaseModel):
-    """Message between agents."""
-
+class Message(BaseModel):
     sender: role_t = Field(..., description="Type of sender agent")
     recipient: role_t = Field(..., description="Type of recipient agent")
     content: dict[str, str | Path] = Field(default_factory=dict)

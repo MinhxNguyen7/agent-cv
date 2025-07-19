@@ -11,7 +11,7 @@ from .training import (
 )
 
 from .messages import (
-    AgentMessage as AgentMessage,
+    Message as Message,
     TaskStatus as TaskStatus,
     TaskResult as TaskResult,
 )

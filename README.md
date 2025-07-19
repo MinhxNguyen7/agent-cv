@@ -36,9 +36,6 @@ pip install -e .
 
 - Python 3.12+
 - PyTorch
-- YOLO (MultimediaTechLab fork)
-- Lightning framework
-- Jupyter (nbclient, nbformat, ipykernel)
 - Anthropic API key (for multimodal AI capabilities)
 
 ## Usage
@@ -106,6 +103,6 @@ The codebase currently implements:
 - ✅ Jupyter-based code execution environment
 - ✅ Anthropic LMM integration with multimodal support
 - ✅ Rich logging and formatting utilities
-- ✅ Training agent framework with prompt templates
+- 🚧Training agent framework with prompt templates
 - 🚧 End-to-end agent orchestration workflows
 - 🚧 Automated labeling pipeline integration

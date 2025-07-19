@@ -6,7 +6,7 @@ from pathlib import Path
 from anthropic import Anthropic
 from anthropic.types import MessageParam
 
-from ..models import AgentMessage
+from ..models import Message
 
 
 class LMM(ABC):
@@ -14,7 +14,7 @@ class LMM(ABC):
         self.model_name = model_name
 
     @abstractmethod
-    def __call__(self, chat: Iterable[AgentMessage]) -> str:
+    def __call__(self, chat: Iterable[Message]) -> str:
         """
         Call the language model with a chat history.
 
@@ -34,7 +34,7 @@ class AnthropicLMM(LMM):
         super().__init__(model_name)
         self.client = Anthropic(api_key=api_key)
 
-    def __call__(self, chat: Iterable[AgentMessage]) -> str:
+    def __call__(self, chat: Iterable[Message]) -> str:
         """
         Call the Anthropic language model with a chat history.
 
@@ -47,7 +47,7 @@ class AnthropicLMM(LMM):
         messages = [
             self._convert_to_anthropic_format(msg)
             for msg in chat
-            if isinstance(msg, AgentMessage)
+            if isinstance(msg, Message)
         ]
 
         # Ensure we have at least one message and it starts with user
@@ -71,7 +71,7 @@ class AnthropicLMM(LMM):
 
         return response.content[0].text  # type: ignore
 
-    def _convert_to_anthropic_format(self, msg: AgentMessage) -> MessageParam:
+    def _convert_to_anthropic_format(self, msg: Message) -> MessageParam:
         """
         Convert an AgentMessage to Anthropic API format.
 
